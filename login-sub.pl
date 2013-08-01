@@ -173,6 +173,93 @@ sub aruba {
    print $ssh->peek(0);
 }
 #
+sub cisco {
+   my $username = $USER;
+   my $home = $HOME;
+#  my $sslkey = $home . "/.ssh/$username-key.pem";
+   my $known_hosts = $home ."/.ssh/known_hosts";
+   my $host;
+   my $cmd;
+   my $username;
+   my $password;
+   
+   
+#  my $host = "10.16.0.101";
+    if ($_[0]) {
+       $username = $_[0];
+    }else {
+       $username = "admin";
+    }
+    if ($_[1]) {
+       $password = $_[1];
+    }else {
+       $password = "zx09aspo";
+    }
+
+   if ($_[2]) { $host = $_[2]; } 
+   if ($_[3]) { $cmd = $_[3]; }
+   
+   my $keyscan = `ssh-keyscan $host 2> /dev/null`; 
+   chomp($keyscan);
+
+   open(FILE,"+>>",$known_hosts) or die $!;
+   open(RFILE,"<",$known_hosts) or die $!;
+
+   my $addkey = 1;
+   print @test;
+#
+#cannot find matching host key addes new line every time script is run. reading host key file into array returns nothing
+#
+   while (<RFILE>)
+   {
+      my $line = $_;
+      chomp($line);
+      if ($line eq $keyscan)
+      {
+         print "matching ssh key found\n";
+         $addkey = 0; 
+      }
+   }
+   if ($addkey == 1)
+   {
+      print FILE "$keyscan\n";
+      print "appending sshkey to known_hosts file\n"
+   }
+   close FILE;
+  
+   my @key = ("$sslkey" , "$home/.ssh/id_rsa");
+   my $ssh = Net::SSH::Expect->new (
+      host => $host, 
+      user => $username,
+      ssh_option  => "-i $sslkey" , 
+      raw_pty => 1,
+      );
+
+   
+
+  $ssh->run_ssh() or die "SSH failed $!";
+  ($ssh->read_all(2) =~ /.*>.*/) or die "where's the remote prompt?";
+
+   $ssh->send("en");
+   $ssh->waitfor('Password:' , 1) or print "no enable password prompt\n";;
+
+   #needs to use gpg for password encryption
+
+   $ssh->send("7uvNMct6TwuNhv7");
+   $ssh->waitfor('^.*#.*$') or print "enable password failed";
+   $ssh->exec("no paging");
+   $ssh->send("$cmd");
+
+   my $line;
+
+   $line = $ssh->read_all(9);
+   print "$line\n";
+
+   print "$output\n";
+
+   print $ssh->peek(0);
+}
+#
 sub snmp_scan {
 
 my $hostname = $_[0];

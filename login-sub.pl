@@ -193,7 +193,7 @@ sub cisco {
     if ($_[1]) {
        $password = $_[1];
     }else {
-       $password = "zx09aspo";
+       $password = "abcdefg";
     }
 
    if ($_[2]) { $host = $_[2]; } 
